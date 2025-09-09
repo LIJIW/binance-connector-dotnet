@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Binance.Common;
+using Binance.Derivatives.Models;
 
 namespace Derivatives
 {
@@ -79,5 +80,63 @@ namespace Derivatives
             return result;
         }
 
+        private const string ORDER_BOOK = "/fapi/v1/depth";
+
+        /// <summary>
+        /// | Limit               | Weight(IP)  |.<para />
+        /// |---------------------|-------------|.<para />
+        /// | 5, 10, 20, 50       | 1           |.<para />
+        /// | 100                 | 5           |.<para />
+        /// | 500                 | 10          |.<para />
+        /// | 1000                | 50          |.
+        /// </summary>
+        /// <param name="symbol">Trading symbol, e.g. BNBUSDT.</param>
+        /// <param name="limit">If limit > 1000, then the response will not successfully be handled and throw BinanceHttpException</param>
+        /// <returns>Order book.</returns>
+        public async Task<string> OrderBook(string symbol, int? limit = null)
+        {
+            var result = await this.SendPublicAsync<string>(
+                ORDER_BOOK,
+                HttpMethod.Get,
+                query: new Dictionary<string, object>
+                {
+                    { "symbol", symbol },
+                    { "limit", limit },
+                });
+
+            return result;
+        }
+
+
+        private const string KLINE_CANDLESTICK_DATA = "/fapi/v1/klines";
+
+        /// <summary>
+        /// Kline/candlestick bars for a symbol.<para />
+        /// Klines are uniquely identified by their open time.<para />
+        /// - If `startTime` and `endTime` are not sent, the most recent klines are returned.<para />
+        /// Weight(IP): 1.
+        /// </summary>
+        /// <param name="symbol">Trading symbol, e.g. BNBUSDT.</param>
+        /// <param name="interval">kline intervals.</param>
+        /// <param name="startTime">UTC timestamp in ms.</param>
+        /// <param name="endTime">UTC timestamp in ms.</param>
+        /// <param name="limit">Default 500; max 1500.</param>
+        /// <returns>Kline data.</returns>
+        public async Task<string> KlineCandlestickData(string symbol, Interval interval, long? startTime = null, long? endTime = null, int? limit = null)
+        {
+            var result = await this.SendPublicAsync<string>(
+                KLINE_CANDLESTICK_DATA,
+                HttpMethod.Get,
+                query: new Dictionary<string, object>
+                {
+                    { "symbol", symbol },
+                    { "interval", interval },
+                    { "startTime", startTime },
+                    { "endTime", endTime },
+                    { "limit", limit },
+                });
+
+            return result;
+        }
     }
 }
